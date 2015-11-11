@@ -1,8 +1,9 @@
 # phl
 
-> **This is a slimmer version and fork of [nyc](https://github.com/bcoe/nyc)**
+> **This is a slimmer es6 version and fork of [nyc](https://github.com/bcoe/nyc)**
 
 Supporting currently Mac OSX only at the time, if you want better support use [nyc](https://github.com/bcoe/nyc).
+
 
 ```shell
 phl npm test
@@ -79,7 +80,7 @@ you can use any reporters that are supported by istanbul:
 phl report --reporter=lcov
 ```
 
-## Excluding Files
+## Including and Excluding Files
 
 By default phl does not instrument files in `node_modules`, or `test`
 for coverage. You can override this setting in your package.json, by
@@ -95,40 +96,33 @@ adding the following configuration:
 }}
 ```
 
+If you need coverage for files/directories inside `node_modules`  you can include them
+like so:
 
-## Integrating With Coveralls
-
-[coveralls.io](https://coveralls.io) is a great tool for adding
-coverage reports to your GitHub project. Here's how to get phl
-integrated with coveralls and travis-ci.org:
-
-1. add the coveralls and phl dependencies to your module:
-
-```shell
-npm install coveralls phl --save
-```
-
-2. update the scripts in your package.json to include these bins:
-
-```bash
-{
-  "script": {
-    "test": "phl tap ./test/*.js",
-    "coverage": "phl report --reporter=text-lcov | coveralls",
+```js
+{"config": {
+  "phl": {
+    "include": [
+      "node_modules/utils"
+    ]
   }
-}
+}}
 ```
 
-3. add the environment variable `COVERALLS_REPO_TOKEN` to travis, this is used by
-  the coveralls bin.
+For a better illustration the following:
 
-4. add the following to your `.travis.yml`:
-
-```yaml
-after_success: npm run coverage
+```js
+{"config": {
+  "phl": {
+    "exclude": [
+      "node_modules/"
+    ],
+    "include": [
+      "node_modules/utils"
+    ]
+  }
+}}
 ```
 
-That's all there is to it!
+excludes all files inside of `node_modules` directory other than the utils directory
 
-_Note: by default coveralls.io adds comments to pull-requests on GitHub, this can
-feel intrusive. To disable this, click on your repo on coveralls.io and uncheck `LEAVE COMMENTS?`._

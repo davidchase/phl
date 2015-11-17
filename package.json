@@ -25,8 +25,7 @@
     "signal-exit": "^2.1.1",
     "spawn-wrap": "^1.0.1",
     "strip-bom": "^2.0.0",
-    "xtend": "4.0.1",
-    "yargs": "^3.15.0"
+    "xtend": "4.0.1"
   },
   "devDependencies": {
     "ava": "0.4.2",

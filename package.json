@@ -1,7 +1,7 @@
 {
   "name": "phl",
-  "description": "a code coverage tool that works well with subprocesses.",
-  "version": "1.0.0",
+  "description": "a thin wrapper around istanbul to support ava test framework.",
+  "version": "1.0.1",
   "author": "David Chase",
   "bin": {
     "phl": "./bin/phl.js"

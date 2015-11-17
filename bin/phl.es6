@@ -1,113 +1,81 @@
 #!/usr/bin/env node
 
-const foreground = require('foreground-child');
-const phl = require('../');
 const path = require('path');
-const sw = require('spawn-wrap');
-const yargs = require('yargs');
+const foreground = require('foreground-child');
+const wrap = require('spawn-wrap');
+const program = require('commander');
+const phl = require('../');
+const pkg = require('../package.json');
 const internals = {};
 
 internals.report = function report(args) {
+    args = args || {};
+    if (args.silent) {
+        return;
+    }
     process.env.PHL_CWD = process.cwd();
     phl.init({
-        reporter: args.reporter
+        reporter: args.reporter || 'text'
     });
     phl.report();
 };
 
-if (process.env.PHL_CWD) {
-    phl.init();
-    phl.wrap();
+internals.istanbulCheckCoverage = function istanbulCheckCoverage(options) {
+    foreground(process.execPath, [require.resolve('istanbul/lib/cli'),
+        'check-coverage',
+        '--lines=' + options.lines,
+        '--functions=' + options.functions,
+        '--branches=' + options.branches,
+        '--statements=' + options.statements,
+        path.resolve(process.cwd(), './.phl_output/*.json')
+    ]);
+};
 
-    const name = require.resolve('../');
-    delete require.cache[name];
+program
+    .version(pkg.version)
+    .usage('[cmd | options] <dirs....>');
 
-    sw.runMain();
-} else {
-    yargs
-        .usage('$0 [command] [options]\n\nrun your tests with the phl bin to instrument them with coverage')
-        .command('report', 'run coverage report for .phl_output', function(yargs) {
-            yargs
-                .usage('$0 report [options]')
-                .option('r', {
-                    alias: 'reporter',
-                    describe: 'coverage reporter(s) to use',
-                    default: 'text'
-                })
-                .help('h')
-                .alias('h', 'help')
-                .example('$0 report --reporter=lcov', 'output an HTML lcov report to ./coverage');
-        })
-        .command('check-coverage', 'check whether coverage is within thresholds provided', function(yargs) {
-            yargs
-                .usage('$0 check-coverage [options]').option('b', {
-                    alias: 'branches',
-                    default: 0,
-                    description: 'what % of branches must be covered?'
-                })
-                .option('f', {
-                    alias: 'functions',
-                    default: 0,
-                    description: 'what % of functions must be covered?'
-                })
-                .option('l', {
-                    alias: 'lines',
-                    default: 90,
-                    description: 'what % of lines must be covered?'
-                })
-                .option('s', {
-                    alias: 'statements',
-                    default: 0,
-                    description: 'what % of statements must be covered?'
-                })
-                .help('h')
-                .alias('h', 'help')
-                .example('$0 check-coverage --lines 95', "check whether the JSON in phl's output folder meets the thresholds provided");
-        })
-        .option('r', {
-            alias: 'reporter',
-            describe: 'coverage reporter(s) to use',
-            default: 'text'
-        })
-        .option('s', {
-            alias: 'silent',
-            default: false,
-            type: 'boolean',
-            describe: "don't output a report after tests finish running"
-        })
-        .help('h')
-        .alias('h', 'help')
-        .version(require('../package.json').version)
-        .example('$0 npm test', 'instrument your tests with coverage')
-        .example('$0 report --reporter=text-lcov', 'output lcov report after running your tests')
-        .epilog('visit http://git.io/NFRQ7g for list of available reporters');
+program
+    .command('report')
+    .option('-r, --reporter <reporter>', 'specify report to use, default:text')
+    .option('-s, --silent', 'dont output any coverage')
+    .description('run coverage report for .phl_output')
+    .action(internals.report);
+
+program
+    .command('check-coverage')
+    .description('check whether coverage is within thresholds provided')
+    .option('-l, --lines <lines>', 'what n of lines must be covered?')
+    .option('-b, --branches <branches>', 'what n of branches must be covered?')
+    .option('-f, --functions <functions>', 'what n of functions must be covered?')
+    .option('-s, --statements <statements>', 'what n of statements must be covered?')
+    .action(internals.istanbulCheckCoverage);
 
 
-    if (~yargs.argv._.indexOf('report')) {
-        // run a report.
-        process.env.PHL_CWD = process.cwd();
+program
+    .arguments('[dir...]')
+    .action(function(dirs) {
+        if (process.env.PHL_CWD) {
+            phl.init();
+            phl.wrap();
+            const name = require.resolve('../');
+            delete require.cache[name];
 
-        internals.report(yargs.argv);
-    } else if (~yargs.argv._.indexOf('check-coverage')) {
-        foreground(process.execPath, [require.resolve('istanbul/lib/cli'), 'check-coverage', '--lines=' + yargs.argv.lines, '--functions=' + yargs.argv.functions, '--branches=' + yargs.argv.branches, '--statements=' + yargs.argv.statements, path.resolve(process.cwd(), './.phl_output/*.json')]);
-    } else if (yargs.argv._.length) {
-        // wrap subprocesses and execute argv[1]
+            return wrap.runMain();
+        }
         phl.init();
         phl.cleanup();
 
-        sw([__filename], {
+        wrap([__filename], {
             PHL_CWD: process.cwd()
         });
 
-        foreground(phl.mungeArgs(yargs.argv), function(done) {
-            if (!yargs.argv.silent) {
-                internals.report(yargs.argv);
-            }
+        foreground(dirs, function(done) {
+            internals.report(program.args);
             return done();
         });
-    } else {
-        // I don't have a clue what you're doing.
-        yargs.showHelp();
-    }
-}
 
+    });
+
+
+program.parse(process.argv);

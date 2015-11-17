@@ -146,10 +146,4 @@ PHL.report = function report(next, _collector, _reporter) {
     reporter.write(collector, true, next);
 };
 
-
-PHL.mungeArgs = function(yargv) {
-    const argv = process.argv.slice(1);
-    return argv.slice(argv.indexOf(yargv._[0]));
-};
-
 module.exports = PHL;

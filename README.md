@@ -12,6 +12,10 @@ phl npm test
 a code coverage tool built on [istanbul](https://www.npmjs.com/package/istanbul)
 that works for applications that spawn subprocesses.
 
+## Why?
+
+Because the place i work needed some features that nyc currently does not provide... simple as that.
+
 ## Instrumenting Your Code
 
 Simply run your tests with `phl`, and it will collect coverage information for

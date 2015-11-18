@@ -1,7 +1,7 @@
 {
   "name": "phl",
   "description": "a thin wrapper around istanbul to support ava test framework.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "David Chase",
   "bin": {
     "phl": "./bin/phl.js"
